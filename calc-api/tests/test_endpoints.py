@@ -30,7 +30,7 @@ class TestMeta:
 
     def test_version_reports_engine_and_ephemeris(self, client):
         body = client.get("/v1/version").json()
-        assert body["engine_version"].startswith("0.1.0+fork.")
+        assert body["engine_version"].startswith("0.1.0+rev.")
         assert "swisseph" in body["ephemeris"]
         assert body["ayanamsa_default"] == "LAHIRI"
         # All four engine ayanamsas must be offered — astrologers disagree

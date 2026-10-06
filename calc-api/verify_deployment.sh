@@ -33,7 +33,7 @@ pass "/healthz"
 
 VERSION_JSON="$(curl -fsS "${BASE}/v1/version")" || fail "/v1/version"
 ENGINE="$(printf '%s' "$VERSION_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin)["engine_version"])')"
-[[ "$ENGINE" == 0.1.0+fork.* ]] || fail "unexpected engine_version: ${ENGINE}"
+[[ "$ENGINE" == 0.1.0+rev.* ]] || fail "unexpected engine_version: ${ENGINE}"
 pass "/v1/version reports ${ENGINE}"
 
 # 2 ── AGPL section 13: the source offer must be reachable

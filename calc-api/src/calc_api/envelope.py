@@ -34,18 +34,18 @@ ENGINE_REVISION = 3
 def engine_version() -> str:
     """Return the version string that identifies this engine build.
 
-    Shaped as ``<api version>+fork.<revision>.<short commit>``, e.g.
-    ``0.1.0+fork.1.a1b2c3d``. The commit is omitted when git is unavailable,
-    which is the case in some container builds.
+    Shaped as ``<api version>+rev.<revision>.<short commit>``, e.g.
+    ``0.1.0+rev.3.a1b2c3d``. The commit is omitted when git is unavailable, which
+    is the case in some container builds.
 
     Returns:
         A stable identifier for the computational behaviour of this deployment.
 
     Example:
-        >>> engine_version().startswith("0.1.0+fork.")
+        >>> engine_version().startswith("0.1.0+rev.")
         True
     """
-    base = f"{_api_version}+fork.{ENGINE_REVISION}"
+    base = f"{_api_version}+rev.{ENGINE_REVISION}"
     commit = _git_short_sha()
     return f"{base}.{commit}" if commit else base
 

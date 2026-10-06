@@ -158,7 +158,7 @@ def test_endpoint_on_every_chart(client, path: str, chart_name: str):
 
     payload = response.json()
     assert payload["data"], f"{path} on {chart_name}: empty data"
-    assert payload["meta"]["engine_version"].startswith("0.1.0+fork.")
+    assert payload["meta"]["engine_version"].startswith("0.1.0+rev.")
 
 
 @pytest.mark.parametrize("chart_name", list(BENCHMARK_CHARTS))

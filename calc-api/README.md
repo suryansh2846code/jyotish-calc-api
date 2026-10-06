@@ -47,7 +47,7 @@ Every endpoint is `POST /v1/<name>` with a JSON body and returns:
 {
   "data": { ... },
   "meta": {
-    "engine_version": "0.1.0+fork.1",
+    "engine_version": "0.1.0+rev.1",
     "ayanamsa": "lahiri",
     "computed_at": "2026-10-06T12:00:00Z"
   }
