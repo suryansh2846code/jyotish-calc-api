@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.venv/
+dist/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+site/
+.env
+reports/
+
+# calc-api subproject
+calc-api/.venv/

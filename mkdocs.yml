@@ -1,0 +1,61 @@
+site_name: vedic-calc
+site_description: Open-source Vedic astrology calculation library
+repo_url: https://github.com/atolat/vedic-calc
+repo_name: atolat/vedic-calc
+
+theme:
+  name: material
+  palette:
+    - scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+    - scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+  icon:
+    logo: material/creation
+  font:
+    text: DM Sans
+    code: JetBrains Mono
+  features:
+    - content.code.copy
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.instant
+    - toc.follow
+    - search.suggest
+    - search.highlight
+
+extra_css:
+  - https://fonts.googleapis.com/css2?family=Newsreader:wght@400;500;600&display=swap
+  - stylesheets/extra.css
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+  - tables
+  - attr_list
+
+nav:
+  - Home: index.md
+  - Vedic Astrology Concepts: concepts.md
+  - Architecture: architecture.md
+  - API Reference: api.md
+  - Accuracy & Testing: accuracy.md
+  - API Benchmarks: benchmarks.md
+  - PyJHora Comparison: comparison.md
+  - Contributing: contributing.md

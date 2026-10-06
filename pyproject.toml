@@ -1,0 +1,46 @@
+[project]
+name = "vedic-calc"
+version = "0.1.0"
+description = "Open-source Vedic astrology calculation library built on Swiss Ephemeris"
+readme = "README.md"
+license = "AGPL-3.0-or-later"
+requires-python = ">=3.11"
+dependencies = [
+    "pyswisseph>=2.10",
+    "pydantic>=2.10",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=6.0",
+    "pytest-xdist>=3.0",
+]
+comparison = [
+    "PyJHora>=4.5",
+    "numpy",
+    "geocoder",
+    "pytz",
+    "timezonefinder",
+    "geopy",
+    "python-dateutil",
+    "pytest-xdist>=3.0",
+]
+docs = [
+    "zensical>=0.0.27",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vedic_calc"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+]

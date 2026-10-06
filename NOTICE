@@ -1,0 +1,80 @@
+jyotish-calc-api
+================
+
+A Vedic astrology calculation engine and the stateless HTTP service that fronts
+it.
+
+Licence: GNU Affero General Public License v3.0 or later. Full text in LICENSE.
+
+
+Attribution
+-----------
+
+The calculation engine in `src/vedic_calc/`, together with its test suite,
+benchmarks and concept documentation, originates from:
+
+    https://github.com/atolat/vedic-calc
+    Copyright (c) atolat <arpantolat30@gmail.com>
+    Licensed under the GNU Affero General Public License v3.0 or later
+
+Copyright in that work remains with its author. This repository is a derivative
+work distributed under the same licence, as AGPL-3.0 section 5 requires. It is
+maintained independently rather than as a GitHub fork; the licence does not
+require a fork relationship, only that the notices and licence travel with the
+code, which they do.
+
+
+Changes made in this repository
+-------------------------------
+
+Required by AGPL-3.0 section 5(a). See the git history for exact diffs.
+
+* Added `calc-api/` — a thin, stateless HTTP service exposing the engine's public
+  functions as a JSON API, with a Dockerfile and deployment configuration.
+  AGPL-3.0, like the engine.
+
+* `core/types.py`, `chart/sade_sati.py`: `SadeSatiResult` now reports Sade Sati
+  proper, Small Panoti and Ashtama Shani as three separate flags
+  (`is_sade_sati`, `is_small_panoti`, `is_ashtama_shani`) alongside the existing
+  `is_active` umbrella. Previously all three were collapsed into `is_active`,
+  which disagreed with reference sources that report them separately.
+
+* `core/types.py`, `dosha/calculator.py`: `DoshaResult` gained `convention` and
+  `basis`, so doshas whose definitions are genuinely disputed state which reading
+  they applied and show the computed evidence. Kaal Sarpa and Shani Dosha
+  populate both. No verdict logic was changed.
+
+* `benchmarks/accuracy.py`: added a pinned `REFERENCE_DATE` and removed every
+  clock read from the comparison path, so results are reproducible. Corrected two
+  comparisons that compared unlike things — a natal indicator against a current
+  transit, and a strict reading against an umbrella one.
+
+* `calc-api/`: KP planet and sign fields are rendered as symbolic names rather
+  than raw integers. The engine types those fields as plain `int`, so they carried
+  no enum type and would otherwise reach callers as Swiss Ephemeris ids and
+  1-based sign indices.
+
+Engine fixes are offered upstream as pull requests.
+
+
+Third-party components
+----------------------
+
+* Swiss Ephemeris, via `pyswisseph` — Copyright (c) Astrodienst AG.
+  Dual-licensed: AGPL-3.0, or a commercial Professional Edition licence.
+  This repository is distributed under AGPL-3.0, which satisfies the free arm of
+  that dual licence, so no commercial licence from Astrodienst is required here.
+  https://www.astro.com/swisseph/
+
+
+Network use — AGPL section 13
+-----------------------------
+
+If you run this software, modified or not, so that users interact with it
+remotely over a network, section 13 obliges you to offer those users access to
+the corresponding source. The complete source is available at:
+
+    https://github.com/suryansh2846code/jyotish-calc-api
+
+Applications served by a deployment of `calc-api/` link to this repository from
+their user-facing interface in order to satisfy that obligation.
