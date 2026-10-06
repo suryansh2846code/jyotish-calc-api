@@ -12,3 +12,6 @@ reports/
 
 # calc-api subproject
 calc-api/.venv/
+
+# calc-api subproject
+calc-api/.venv/

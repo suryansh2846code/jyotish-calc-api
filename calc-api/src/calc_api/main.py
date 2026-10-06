@@ -31,7 +31,7 @@ app = FastAPI(
     description=(
         "Thin stateless HTTP service over the vedic_calc engine. "
         "AGPL-3.0-or-later. Source: "
-        "https://github.com/suryansh2846code/vedic-calc"
+        "https://github.com/suryansh2846code/jyotish-calc-api"
     ),
 )
 
@@ -80,6 +80,6 @@ async def root() -> dict[str, Any]:
         "service": "calc-api",
         "version": __version__,
         "licence": "AGPL-3.0-or-later",
-        "source": "https://github.com/suryansh2846code/vedic-calc",
+        "source": "https://github.com/suryansh2846code/jyotish-calc-api",
         "docs": "/docs",
     }

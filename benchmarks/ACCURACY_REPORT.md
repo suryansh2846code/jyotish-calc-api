@@ -1,6 +1,6 @@
 # vedic-calc Comprehensive Accuracy Benchmark
 
-**Generated**: 2026-10-06 06:27 UTC
+**Generated**: 2026-10-06 10:52 UTC
 **Charts tested**: 10
 **Compatibility pairs**: 5
 **Reference APIs**: AstrologyAPI.com (Professional), Prokerala

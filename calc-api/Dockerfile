@@ -53,7 +53,7 @@ FROM python:3.11-slim AS runtime
 # AGPL section 13: anyone interacting with this service over a network must be
 # offered its source. The running service advertises this at GET /.
 LABEL org.opencontainers.image.licenses="AGPL-3.0-or-later" \
-      org.opencontainers.image.source="https://github.com/suryansh2846code/vedic-calc" \
+      org.opencontainers.image.source="https://github.com/suryansh2846code/jyotish-calc-api" \
       org.opencontainers.image.title="calc-api" \
       org.opencontainers.image.description="Stateless HTTP service over the vedic_calc engine"
 
