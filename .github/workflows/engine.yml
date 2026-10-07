@@ -1,0 +1,113 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --extra dev --python ${{ matrix.python-version }}
+
+      - name: Run tests (parallel)
+        run: uv run --python ${{ matrix.python-version }} pytest -v --tb=short -n auto --ignore=tests/comparison
+
+      - name: Run tests with coverage
+        if: matrix.python-version == '3.13'
+        run: uv run --python ${{ matrix.python-version }} pytest --cov=vedic_calc --cov-report=term-missing --ignore=tests/comparison
+
+      - name: Run comparison tests & generate report
+        if: matrix.python-version == '3.13'
+        continue-on-error: true
+        run: uv run --python ${{ matrix.python-version }} --extra comparison pytest tests/comparison/ -v --tb=short
+
+      - name: Upload comparison report
+        if: matrix.python-version == '3.13'
+        uses: actions/upload-artifact@v4
+        with:
+          name: comparison-report
+          path: reports/
+          if-no-files-found: ignore
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        run: uv python install 3.13
+
+      - name: Install dependencies
+        run: uv sync --extra dev --python 3.13
+
+      - name: Check import sorting
+        run: uv run --python 3.13 python -c "import vedic_calc; print('Import OK')"
+
+      - name: Verify package builds
+        run: uv build
+
+  benchmark:
+    name: Accuracy benchmark (must stay at 1015/1015)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv python install 3.13
+      - run: uv sync --extra dev --python 3.13
+
+      # Phase 1 pinned REFERENCE_DATE and removed every clock read from the
+      # comparison path precisely so this could be a gate. Before that, the suite
+      # drifted as planets moved and a run months later would fail with no code
+      # change — which is exactly what happened to Yogini Dasha.
+      - name: Run against cached fixtures
+        run: uv run --python 3.13 python benchmarks/accuracy.py
+
+      - name: Assert a perfect score
+        run: |
+          # The benchmark exits 0 regardless, so the report is what we check.
+          if ! grep -qE '^\*\*Total tests: 1015 \| Passed: 1015' benchmarks/ACCURACY_REPORT.md; then
+            echo "::error::Benchmark is no longer 1015/1015. See the report below."
+            sed -n '1,40p' benchmarks/ACCURACY_REPORT.md
+            exit 1
+          fi
+          echo "Benchmark holds at 1015/1015."
+
+      - name: Reproducible between runs
+        run: |
+          # Two runs must agree on every result. If they do not, a clock read has
+          # crept back into the comparison path and the suite has stopped being a
+          # gate — which is the failure phase 1 existed to fix.
+          #
+          # The report's own "Generated" timestamp necessarily differs between
+          # runs, so it is stripped before comparing. Everything else must match.
+          strip() { grep -v '^\*\*Generated\*\*:' "$1"; }
+
+          strip benchmarks/ACCURACY_REPORT.md > /tmp/run-a.txt
+          uv run --python 3.13 python benchmarks/accuracy.py >/dev/null
+          strip benchmarks/ACCURACY_REPORT.md > /tmp/run-b.txt
+
+          if ! diff -q /tmp/run-a.txt /tmp/run-b.txt >/dev/null; then
+            echo "::error::Benchmark results are not reproducible between runs."
+            diff /tmp/run-a.txt /tmp/run-b.txt | head -30
+            exit 1
+          fi
+          echo "Reproducible."
