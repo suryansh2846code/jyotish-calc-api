@@ -342,3 +342,82 @@ class TestAuth:
             assert ok.status_code == 200
             # Probes stay open so load balancers can reach them.
             assert c.get("/healthz").status_code == 200
+
+
+class TestTimezoneAwareDates:
+    """Aware datetimes must work, not crash.
+
+    This class exists because of a real outage. Every test above passed a *naive*
+    date string, so nothing caught that the engine's dasha bounds are naive and
+    comparing them to an aware value raises ``TypeError: can't compare
+    offset-naive and offset-aware datetimes``. The first real consumer sent
+    ``...+00:00`` and got a 500.
+
+    Accepting a valid ISO datetime and then crashing is a contract bug, so the
+    service normalises instead.
+    """
+
+    @pytest.mark.parametrize(
+        "as_of",
+        [
+            "2026-10-08T12:00:00",            # naive, as the old tests sent
+            "2026-10-08T12:00:00+00:00",      # UTC, as app-api sends
+            "2026-10-08T12:00:00+05:30",      # IST
+            "2026-10-08T12:00:00Z",           # Zulu
+            "2026-10-08T12:00:00-04:00",      # negative offset
+        ],
+    )
+    def test_dasha_accepts_any_iso_form(self, client, birth, as_of: str):
+        resp = client.post(
+            "/v1/dasha",
+            json={"birth": birth, "system": "vimsottari", "as_of": as_of},
+        )
+        assert resp.status_code == 200, f"{as_of}: {resp.text[:200]}"
+        # `current` is the field that does the naive/aware comparison.
+        assert resp.json()["data"]["current"], f"{as_of}: no current period"
+
+    @pytest.mark.parametrize(
+        "as_of", ["2026-10-08T12:00:00", "2026-10-08T12:00:00+00:00"]
+    )
+    def test_sade_sati_accepts_any_iso_form(self, client, birth, as_of: str):
+        resp = client.post("/v1/sade-sati", json={"birth": birth, "as_of": as_of})
+        assert resp.status_code == 200, f"{as_of}: {resp.text[:200]}"
+
+    def test_chandrashtama_accepts_aware_bounds(self, client, birth):
+        resp = client.post(
+            "/v1/chandrashtama",
+            json={
+                "birth": birth,
+                "start": "2026-10-08T00:00:00+00:00",
+                "end": "2026-11-08T00:00:00+00:00",
+            },
+        )
+        assert resp.status_code == 200, resp.text
+
+    def test_muhurta_search_accepts_aware_bounds(self, client):
+        resp = client.post(
+            "/v1/muhurta/search",
+            json={
+                "activity": "travel",
+                "start": "2026-10-08T00:00:00+00:00",
+                "end": "2026-10-20T00:00:00+00:00",
+                "latitude": 19.076,
+                "longitude": 72.878,
+                "timezone_offset": 5.5,
+            },
+        )
+        assert resp.status_code == 200, resp.text
+
+    def test_the_same_instant_in_two_notations_gives_the_same_answer(
+        self, client, birth
+    ):
+        """12:00+05:30 and 06:30Z are the same moment, so results must match."""
+        a = client.post(
+            "/v1/dasha",
+            json={"birth": birth, "as_of": "2026-10-08T12:00:00+05:30"},
+        ).json()["data"]
+        b = client.post(
+            "/v1/dasha",
+            json={"birth": birth, "as_of": "2026-10-08T06:30:00+00:00"},
+        ).json()["data"]
+        assert a == b

@@ -17,10 +17,10 @@ and belongs to the consumer, which has one.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from vedic_calc.core.constants import Ayanamsa, Nakshatra, Sign
 
 # Ayanamsa is exposed by name rather than by the engine's numeric value, which
@@ -46,10 +46,58 @@ def _ayanamsa_field() -> Any:
     )
 
 
+def _naive_utc(value: datetime) -> datetime:
+    """Normalise a datetime to naive UTC.
+
+    The engine works in **naive** datetimes: dasha period bounds come out of
+    ``jd_to_datetime`` without tzinfo. Comparing one of those against a
+    timezone-aware value raises ``TypeError: can't compare offset-naive and
+    offset-aware datetimes`` — which is exactly what happened the first time a
+    real consumer sent ``2026-10-08T12:00:00+00:00``, because every test here had
+    passed a naive string.
+
+    Accepting a valid ISO datetime and then crashing is a contract bug, so aware
+    input is converted to UTC and stripped here rather than being rejected or
+    passed through. For periods measured in years a few hours of offset is
+    immaterial; what matters is that the comparison is possible at all.
+
+    Args:
+        value: Any datetime, aware or naive.
+
+    Returns:
+        The equivalent naive datetime, in UTC when the input carried an offset.
+
+    Example:
+        >>> from datetime import timezone, timedelta
+        >>> aware = datetime(2026, 10, 8, 12, 0,
+        ...                  tzinfo=timezone(timedelta(hours=5, minutes=30)))
+        >>> _naive_utc(aware)
+        datetime.datetime(2026, 10, 8, 6, 30)
+        >>> _naive_utc(datetime(2026, 10, 8, 12, 0))
+        datetime.datetime(2026, 10, 8, 12, 0)
+    """
+    if value.tzinfo is None:
+        return value
+    return value.astimezone(timezone.utc).replace(tzinfo=None)
+
+
 class _Base(BaseModel):
-    """Shared config: reject unknown fields so typos fail loudly."""
+    """Shared config: reject unknown fields so typos fail loudly.
+
+    Also normalises every ``datetime`` field to naive UTC — see ``_naive_utc``
+    for why. Applied on the base class so a new model with a date field cannot
+    reintroduce the bug by forgetting the validator.
+    """
 
     model_config = ConfigDict(extra="forbid")
+
+    @field_validator("*", mode="after")
+    @classmethod
+    def _normalise_datetimes(cls, value: Any) -> Any:
+        """Strip timezone information from any datetime field."""
+        if isinstance(value, datetime):
+            return _naive_utc(value)
+        return value
 
 
 class BirthData(_Base):
